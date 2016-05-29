@@ -10,7 +10,7 @@ Code for my "Automate all the things AWS with Ansible" workshop — slides: [htt
 
 ## Known Issues
 
-Vagrant <1.8.2 in combination with Ansible 2.0 fails with the following error on `vagrant up`:
+Vagrant <1.8.2 in combination with Ansible >=2.0 fails with the following error on `vagrant up`:
 
 ```
 The Ansible software could not be found! Please verify
