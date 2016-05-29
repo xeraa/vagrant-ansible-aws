@@ -1,0 +1,16 @@
+---
+# Idempotent: Yes
+# Usage: ansible-playbook playbooks/4_instance-configure.yml
+
+- name: Configure and update our first instance.
+  hosts: first
+  become: true
+
+
+  roles:
+     - { role: base }
+
+
+  pre_tasks:
+    - name: Prompt confirmation for servers
+      pause: prompt="You are provisioning a server. Press enter if you want to continue"

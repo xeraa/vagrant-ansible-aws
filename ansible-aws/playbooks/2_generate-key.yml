@@ -1,0 +1,18 @@
+---
+# Idempotent: Yes
+# Usage: ansible-playbook playbooks/2_generate-key.yml
+
+
+- name: Generate the SSH key to use to log into the instance.
+  hosts: aws
+  gather_facts: no
+
+
+  tasks:
+    - name: Generate the key
+      local_action:
+        module: ec2_key
+        name: "{{ myname }}-ssh"
+        region: "{{ aws_region }}"
+        key_material: "{{ item }}"
+      with_file: ~/.ssh/id_rsa.pub

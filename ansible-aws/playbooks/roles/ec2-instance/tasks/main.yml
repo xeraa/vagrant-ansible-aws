@@ -1,0 +1,40 @@
+- name: Instance provisioning with general purpose SSD
+  local_action:
+    module: ec2
+    region: "{{ aws_region }}"
+    key_name: "{{ myname }}-ssh"
+    instance_type: "{{instance_type}}"
+    image: "{{ami}}"
+    group: "{{group_name}}"
+    instance_tags:
+      Name: "{{instance_name}}"
+      class: "{{instance_class}}"
+      environment: "{{ myname }}"
+    volumes:
+      - device_name: /dev/sda1
+        device_type: gp2 #General purpose SSD
+        volume_size: 10 #GB
+        delete_on_termination: true
+    vpc_subnet_id: "{{ vpc_subnet_id }}"
+    assign_public_ip: yes
+    source_dest_check: yes #No traffic forwarding, so we can enable this check
+    wait: yes
+  register: ec2
+
+- name: Create the CPU alarm
+  local_action:
+    module: ec2_metric_alarm
+    state: present
+    name: "cpu-high_{{ instance_name }}"
+    metric: "CPUUtilization"
+    namespace: "AWS/EC2"
+    statistic: Average
+    comparison: ">="
+    threshold: 70.0
+    period: 60
+    evaluation_periods: 5
+    unit: "Percent"
+    description: "Alert when the CPU usage is over 70% on average for more than 5min"
+    dimensions: "{ 'InstanceId': '{{ item.id }}' }"
+    region: "{{ aws_region }}"
+  with_items: "{{ ec2.instances }}"

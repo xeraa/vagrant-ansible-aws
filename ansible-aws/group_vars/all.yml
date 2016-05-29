@@ -1,0 +1,19 @@
+---
+
+# Global variables
+base_directory: "/ansible-aws/"
+
+
+# The user running the ansible commands
+ansible_user: ubuntu
+
+
+# Set the AWS region, availability zones, and the VPC block
+aws_region: eu-central-1
+aws_az0: "{{ aws_region }}a"
+aws_az1: "{{ aws_region }}b"
+vpc_block: 10.1 #First two octets of the network
+
+
+# Set your unique name
+myname: xeraa # CHANGE ME

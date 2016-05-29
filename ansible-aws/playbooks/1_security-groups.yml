@@ -1,0 +1,68 @@
+---
+# Idempotent: Yes
+# Usage: ansible-playbook playbooks/1_security-groups.yml
+
+
+- name: Create the EC2 security groups.
+  hosts: aws
+  gather_facts: no
+
+
+  tasks:
+
+    - name: Add rules for our first instance
+      local_action:
+        module: ec2_group
+        region: "{{ aws_region }}"
+        vpc_id: "{{ vpc_id }}"
+        name: "{{ myname }}_sg_first"
+        description: "{{ myname }} first hosts"
+        # Incoming rules
+        rules:
+          # SSH access
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: "0.0.0.0/0"
+          # HTTP requests
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: "0.0.0.0/0"
+        # Outgoing rules
+        rules_egress:
+          # Allow HTTP traffic globally
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: "0.0.0.0/0"
+          # Allow HTTPS traffic globally for updates and dependencies
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: "0.0.0.0/0"
+          # Allow NTP time updates
+          - proto: udp
+            from_port: 123
+            to_port: 123
+            cidr_ip: "0.0.0.0/0"
+          # Allow GPG keyserver updates
+          - proto: tcp
+            from_port: 11371
+            to_port: 11371
+            cidr_ip: "0.0.0.0/0"
+          # Allow sending mails via SMTP
+          - proto: tcp
+            from_port: 587
+            to_port: 587
+            cidr_ip: "0.0.0.0/0"
+          # Allow sending mails via SMTPS
+          - proto: tcp
+            from_port: 465
+            to_port: 465
+            cidr_ip: "0.0.0.0/0"
+          # Allow outgoing ICMP packets (all types)
+          - proto: icmp
+            from_port: -1
+            to_port: -1
+            cidr_ip: "0.0.0.0/0"

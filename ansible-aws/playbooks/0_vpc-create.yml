@@ -1,0 +1,54 @@
+---
+# Idempotent: No
+# Usage: ansible-playbook playbooks/0_vpc-create.yml
+
+- name: >
+    Create the VPC network.
+    While you can run this multiple times, it won't apply any changes; you need to delete and recreate the VPC.
+  hosts: aws
+  gather_facts: no
+
+  vars:
+    # The VPC info is needed in AWS playbooks ("hosts: aws"), which points to the hostname 127.0.0.1
+    # Do not change this filename or you will break autoloading
+    vpc_info: "{{ base_directory }}/host_vars/127.0.0.1.yml"
+
+  tasks:
+    - name: Create VPC with multi-AZ subnets
+      local_action:
+        module: ec2_vpc
+        state: present
+        wait: true
+        region: "{{ aws_region }}"
+        cidr_block: "{{ vpc_block }}.0.0/16" #Biggest possible AWS network is /16
+        resource_tags: '{"Name":"{{ myname }}_vpc"}'
+        subnets:
+          - cidr: "{{ vpc_block }}.0.0/20"
+            az: "{{ aws_az0 }}"
+            resource_tags: '{"Name":"{{ myname }}_subnet_public_a","Subnet":"subnet_public_a", "Environment":"{{ myname }}"}'
+          - cidr: "{{ vpc_block }}.16.0/20"
+            az: "{{ aws_az0 }}"
+            resource_tags: '{"Name":"{{ myname }}_subnet_private_a","Subnet":"subnet_private_a", "Environment":"{{ myname }}"}'
+          - cidr: "{{ vpc_block }}.64.0/20"
+            az: "{{ aws_az1 }}"
+            resource_tags: '{"Name":"{{ myname }}_subnet_public_b","Subnet":"subnet_public_b", "Environment":"{{ myname }}"}'
+          - cidr: "{{ vpc_block }}.80.0/20"
+            az: "{{ aws_az1 }}"
+            resource_tags: '{"Name":"{{ myname }}_subnet_private_b","Subnet":"subnet_private_b", "Environment":"{{ myname }}"}'
+        dns_hostnames: yes #Set DNS hostnames for the instances
+        dns_support: yes #Enable DNS resolution
+        instance_tenancy: default #No reserved hardware
+        internet_gateway: yes #Gateway to the internet
+        route_tables:
+          - subnets:
+              - "{{ vpc_block }}.0.0/20"
+              - "{{ vpc_block }}.64.0/20"
+            routes:
+              - dest: 0.0.0.0/0
+                gw: igw
+      register: vpc
+    - name: Write the VPC ID to the {{ vpc_info }} file
+      local_action: shell echo '---\nvpc_id:{{ ' ' }}"{{ vpc.vpc_id }}"' > "{{ vpc_info }}" #{{ ' ' }} is a workaround to add a space
+    - name: Write subnet IDs to the {{ vpc_info }} file
+      local_action: shell echo '{{ item.resource_tags.Subnet }}_id:{{ ' ' }}"{{ item.id }}"' >> "{{ vpc_info }}"
+      with_items: "{{ vpc.subnets }}"

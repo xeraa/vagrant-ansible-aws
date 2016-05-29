@@ -1,0 +1,20 @@
+---
+# Idempotent: No
+# Usage: ansible-playbook playbooks/3_instance-create.yml
+
+- name: Create the first instance.
+  hosts: aws
+  gather_facts: no
+
+
+  vars:
+    instance_type: t2.small
+    group_name:
+      - "{{ myname }}_sg_first"
+    instance_class: "{{ myname }}_first"
+    instance_name: "{{ myname }}_first"
+    vpc_subnet_id: "{{subnet_public_a_id}}"
+
+
+  roles:
+    - { role: ec2-instance }

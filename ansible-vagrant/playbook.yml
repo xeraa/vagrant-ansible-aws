@@ -1,0 +1,47 @@
+---
+
+- hosts: all
+
+
+  tasks:
+
+  - name: Install NTP to avoid time drift inside the VM; this might make requests to AWS fail
+    apt: name=ntp state=latest
+    become: true
+
+  - name: Get rid of Chef and Puppet to save some resources autoremove unused packages to save some disk space
+    apt: name={{ item }} state=absent autoremove=yes
+    with_items:
+      - chef
+      - puppet
+    become: true
+
+  - name: Install pip
+    apt: name=python-pip update_cache=yes
+    become: true
+
+  - name: Install ansible-lint and boto
+    pip: name="{{ item }}"
+    with_items:
+      - ansible-lint
+      - boto
+    become: true
+
+  # Cannot use a prompt since we are in interactive mode
+  - name: Adding the Access Key ID environment variable
+    lineinfile: >
+      dest=/etc/environment
+      state=present
+      regexp="^export AWS_ACCESS_KEY_ID"
+      line="export AWS_ACCESS_KEY_ID="
+    become: true
+  - name: Adding the Secret Access Key environment variable
+    lineinfile: >
+      dest=/etc/environment
+      state=present
+      regexp="^export AWS_SECRET_ACCESS_KEY"
+      line="export AWS_SECRET_ACCESS_KEY="
+    become: true
+
+  - name: Creating a public SSH key
+    command: ssh-keygen -N '' -f /home/vagrant/.ssh/id_rsa

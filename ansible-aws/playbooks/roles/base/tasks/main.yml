@@ -1,0 +1,13 @@
+---
+
+- name: Update apt cache
+  apt: update_cache=yes
+
+- name: Upgrade to the latest dependencies
+  apt: upgrade=full
+
+- name: Install nginx
+  apt: name=nginx state=latest
+
+- name: Change the output to your name
+  template: src=index.html.j2 dest=/usr/share/nginx/html/index.html

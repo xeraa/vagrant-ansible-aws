@@ -1,0 +1,11 @@
+[localhost]
+127.0.0.1
+
+
+# Dummy group to set up VPC, RDS,... anything not touching actual instances
+[aws]
+127.0.0.1
+
+
+[first]
+ec2-52-29-131-72.eu-central-1.compute.amazonaws.com
